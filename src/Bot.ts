@@ -20,7 +20,7 @@ export default class Bot{
     private _chat: any;
     private _channelname: string;
     
-    constructor(){
+    constructor(options: object){
         this._tmi = new tmi();
         this._fs = new fs();
         this._Initializer = new Initializer();
@@ -28,13 +28,8 @@ export default class Bot{
         this._PirateSpeak = new PirateSpeak();
         this._Config = Config;
         this._channelname = this._Initializer.channelname;
-        this._options = {
-            options: { debug: true },
-            connection: { reconnect: true },
-            identity: { username: this._Initializer.botusername, password: this._Initializer.apikey },
-            channels: [ this._Initializer.channelname ]
-        };
-        this._messageInterval = {
+        this._options = options;
+        this._messageInterval = { // should put this in config
             time: 900000,
             get interval(){ return this.messageInterval.time; },
             set interval(value) { this.time = value * 60000; }
