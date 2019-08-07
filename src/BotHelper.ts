@@ -16,11 +16,10 @@ export default class BotHelper{
         this._ClientHolder = ClientHolder;
         this._http = http;
         this._Config = Config;
-        this.sc2server = this._Config.App.Game.region;
+        this._sc2server = this._Config.App.Game.region;
         this.InitializeClient();
         this._channelname = this._Initializer.channelname;
     }
-    sc2server = this._Config.App.Game.region; // Sets a constraint on the selectable sc2unmasked accounts
 
     async InitializeClient(){
         await this._ClientHolder.init(this._Initializer.clientid, this._Initializer.accessToken);
@@ -42,7 +41,7 @@ export default class BotHelper{
             const stream = user.getStream();
             var start = stream.startDate; // Start date
             var currentTime = new Date(); // Current time
-            var msdifference = (currentTime - start); // Difference
+            var msdifference = (currentTime.getTime() - start); // Difference
             var output = await this.ConvertUptime(msdifference);
             if(output.day === 0 && output.hour === 0 && output.minutes === 0){
                 callback(this._channelname + " has been live for " + output.seconds + " seconds");
@@ -100,13 +99,13 @@ export default class BotHelper{
     }
 
     async SearchSC2Unmasked(player1: any, player2: any, callback){
-        var player1search = "http://sc2unmasked.com/API/Player?name=" + player1.name + "&server=" + this.sc2server + "&race=" + this.GetMatchup(player1.race);
-        var player2search = "http://sc2unmasked.com/API/Player?name=" + player2.name + "&server=" + this.sc2server + "&race=" + this.GetMatchup(player2.race);
+        var player1search = "http://sc2unmasked.com/API/Player?name=" + player1.name + "&server=" + this._sc2server + "&race=" + this.GetMatchup(player1.race);
+        var player2search = "http://sc2unmasked.com/API/Player?name=" + player2.name + "&server=" + this._sc2server + "&race=" + this.GetMatchup(player2.race);
         
         async function getMMR(playerdata, player, callback){
             var mmr = 0;
             for (let i = 0; i < playerdata.players.length; i++){
-                if(playerdata.players[i].acc_name == player.name && playerdata.players[i].server == this.sc2server && playerdata.players[i].mmr > mmr){
+                if(playerdata.players[i].acc_name == player.name && playerdata.players[i].server == this._sc2server && playerdata.players[i].mmr > mmr){
                     mmr = playerdata.players[i].mmr;
                 }
             }
@@ -148,9 +147,10 @@ export default class BotHelper{
 
     async GetOpponent(callback) {
         var gameurl = "http://localhost:6119/game"; //StarCraft 2 Port
+        var data;
         this._http.get(gameurl, (resp) => {
             resp.on('data', (chunk) => {
-                var data = JSON.parse(chunk);
+                data = JSON.parse(chunk);
             });
             resp.on('end', () => {
                 //console.log(data);
@@ -176,7 +176,7 @@ export default class BotHelper{
         });
     }
 
-    async GetMatchup(race: string): Promise<string> {
+    async GetMatchup(race: string) {
         if(race == "Prot"){
             race = 'p';
         }

@@ -200,7 +200,7 @@ export default class Bot{
     
             if(strArray[0] === ("!replaypack")){
                 try{
-                    if(user.username === this._channelname || user.username === channelname.toLowerCase()){
+                    if(user.username === this._channelname || user.username === this._channelname.toLowerCase()){
                         this._chat.action(this._channelname, "Working on it");
                         this._PythonShell.run(this.___dirname + '/Renamer.py', null, function (err) {
                             if (err) throw err;
@@ -221,7 +221,8 @@ export default class Bot{
                             sentenceArray.shift();
                             sentenceArray.shift();
                             this._Config.Commands[strArray[1]] = sentenceArray.join(" ").toString();
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished());
+                            var error;
+                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished(error));
                             function finished(error){
                                 this._chat.action(this._channelname, "command " + strArray[1] +" added");
                             }
@@ -246,7 +247,8 @@ export default class Bot{
                             if(strArray[1].charAt(0) == "!"){
                                 delete this._Config.Commands[strArray[1]];
                                 var strConfig = JSON.stringify(this._Config, null, 4);
-                                fs.writeFileSync("./config.json", strConfig, finished());
+                                var error;
+                                fs.writeFileSync("./config.json", strConfig, finished(error));
                                 function finished(error){
                                     this._chat.action(this._channelname, "command " + strArray[1] +" removed");
                                 }
@@ -273,7 +275,8 @@ export default class Bot{
                             sentenceArray.shift();
                             var keyvalue = Object.keys(this._Config.Alerts.SubMessages).length;
                             this._Config.Alerts.SubMessages[keyvalue] = sentenceArray.join(" ").toString();
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished());
+                            var error;
+                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished(error));
                             function finished(error){
                                 this._chat.action(this._channelname, sentenceArray.join(" ") + " submessage added!");
                             }
@@ -297,7 +300,8 @@ export default class Bot{
                             sentenceArray.shift();
                             var keyvalue = Object.keys(this._Config.Alerts.BanMessages).length;
                             this._Config.Alerts.BanMessages[keyvalue] = sentenceArray.join(" ").toString();
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished());
+                            var error;
+                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished(error));
                             function finished(error){
                                 this._chat.action(this._channelname, sentenceArray.join(" ") + " banmessage added!");
                             }
@@ -320,7 +324,8 @@ export default class Bot{
                             sentenceArray.shift();
                             var keyvalue = Object.keys(this._Config.Alerts.Messages).length;
                             this._Config.Alerts.Messages[keyvalue] = sentenceArray.join(" ").toString();
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished());
+                            var error;
+                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished(error));
                             function finished(error){
                                 this._chat.action(this._channelname, sentenceArray.join(" ") + " message added!");
                             }
@@ -361,7 +366,8 @@ export default class Bot{
                             sentenceArray.shift();
                             keyvalue = Object.keys(this._Config.Alerts.WelcomeMessages).length;
                             this._Config.Alerts.WelcomeMessage[keyvalue] = sentenceArray.join(" ").toString();
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished());
+                            var error
+                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished(error));
                             function finished(error){
                                 this._chat.action(this._channelname, sentenceArray.join(" ") + " welcomemessage added!");
                             }
@@ -384,7 +390,8 @@ export default class Bot{
                             sentenceArray.shift();
                             keyvalue = Object.keys(this._Config.Alerts.HostMessages).length;
                             this._Config.Alerts.HostMessages[keyvalue] = sentenceArray.join(" ").toString();
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished());
+                            var error;
+                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished(error));
                             function finished(error){
                                 this._chat.action(this._channelname, sentenceArray.join(" ") + " host message added!");
                             }
@@ -404,7 +411,7 @@ export default class Bot{
                         }
                         else if (strArray.length == 2){
                             (async() => {
-                                BotHelper.Shoutout(strArray[1], function(shoutout){
+                                this._BotHelper.Shoutout(strArray[1], function(shoutout){
                                     this._chat.action(this._channelname, shoutout);
                                 });
                             })();

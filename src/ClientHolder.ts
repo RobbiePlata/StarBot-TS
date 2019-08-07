@@ -12,7 +12,7 @@ export default class ClientHolder {
         this._client = null;
         this._clientid = null;
         this._accessToken = null;
-        this._TwitchClient = new TwitchClient();
+        this._TwitchClient = TwitchClient;
     }
     
     async init(clientid: string, accessToken: string): Promise<any> {
