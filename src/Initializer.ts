@@ -1,5 +1,5 @@
-import fs from 'file-system';
-import readline from 'file-system';
+import fs from 'fs';
+import readline from 'readline';
 import opn from 'opn';
 import config from './Config.json';
 
@@ -18,9 +18,9 @@ export default class Initializer{
 
     constructor(){
         this._opn = new opn();
-        this._fs = new fs();
-        this._readline = new readline();
-        this._readline = config;
+        this._fs = fs;
+        this._readline = readline;
+        this._config = config;
         this._apikey = this.GetBotAPI();
         this._botusername = this.GetBotUsername();
         this._channelname = this.GetChannelName();
@@ -36,7 +36,6 @@ export default class Initializer{
     public get accessToken(): string  { return this._accessToken; }
     public get replaypath(): string { return this._replaypath; }
     
-    // If botusername is empty, ask user for bot username and write to file
     GetBotUsername(): string {
     var botusername = this._config.App.Bot.name;
     if(botusername !== "" && botusername !== undefined){
@@ -59,16 +58,13 @@ export default class Initializer{
         }
     }
 
-    // Get user access token
     GetAccessToken(): string {
     var token = this._config.App.Channel.accessToken;
-    // Token is present
     if(token !== "" && token !== undefined){
         return token;
     }
-    // Token is not present
     else{
-        this.UserTokenRetrieval(); // Open browser for user to enter token
+        this.OpenAccessTokenWindow(); // Open browser for user to enter token
         this.WriteAccessToken(); // Write access token to accesstoken.txt
             try{
                 return token = this._config.App.Channel.accessToken;
@@ -78,19 +74,6 @@ export default class Initializer{
         }
     }
 
-    // Open web browser for authentication token retrieval
-    UserTokenRetrieval(): void {
-        this._opn("https://twitch.center/token", {
-        wait: true
-        }).then(function(cp) {
-            //console.log('child process:',cp);
-            //console.log('worked');
-        }).catch(function(err) {
-            //console.error(err);
-        });
-    }
-
-    // Write authentication token to file
     WriteAccessToken(): void {
     var key = this._readline.question("Check all scopes, generate token, then enter the code here: ");
     this._config.App.Channel.accessToken = key;
@@ -107,7 +90,6 @@ export default class Initializer{
         }
     }
 
-    // If channelname is empty, ask user for channelname & write channelname to file
     GetChannelName(): string {
     var channelname = this._config.App.Channel.name;
     if(channelname !== "" && channelname !== undefined){
@@ -130,26 +112,13 @@ export default class Initializer{
         }
     }
 
-    // Open web browser for user api confirmation and retrieval
-    BotAPIRetrieval(): void {
-        this._opn("https://twitchapps.com/tmi", {
-        wait: true
-        }).then(function(cp) {
-            //console.log('child process:',cp);
-            //console.log('worked');
-        }).catch(function(err) {
-            //console.error(err);
-        });
-    }
-
-    // If botapi is empty, ask user for prompt user for bot api and write to file
     GetBotAPI(): string{
     var botapi = this._config.App.Bot.apikey;
     if(botapi !== "" && botapi !== undefined){
         return botapi;
     }
     else{
-        this.BotAPIRetrieval();
+        this.OpenBotAPIWindow();
         var api = this._readline.question("Enter your Bot's Oauth key: ");
         this._config.App.Bot.apikey = api;
         this._fs.writeFileSync("./config.json", JSON.stringify(this._config, null, 4), function(err) {
@@ -166,7 +135,6 @@ export default class Initializer{
         }
     }
 
-    // If botusername is empty, ask user for bot username and write to file
     GetReplayPath(): string {
         var path = this._config.App.Game.path;
         if(path !== "" && path !== undefined){
@@ -179,7 +147,7 @@ export default class Initializer{
                 if(err) {
                     return console.log(err);
                 }
-                console.log("Path saved. If you made a mistake, you can change it later in config.json");
+                console.log("Path saved. If you made a mistake, you can change it later in Config.json");
             }); 
             try{
                 return this._config.App.Game.path;
@@ -187,6 +155,29 @@ export default class Initializer{
                 console.log(err);
             }
         }
+    }
+
+    OpenAccessTokenWindow(): void {
+        this._opn("https://www.twitchtokengenerator.com/", {
+        wait: true
+        }).then(function(cp) {
+            //console.log('child process:',cp);
+            //console.log('worked');
+        }).catch(function(err) {
+            //console.error(err);
+        });
+    }
+
+    // Open web browser for user api confirmation and retrieval
+    OpenBotAPIWindow(): void {
+        this._opn("https://twitchapps.com/tmi", {
+        wait: true
+        }).then(function(cp) {
+            //console.log('child process:',cp);
+            //console.log('worked');
+        }).catch(function(err) {
+            //console.error(err);
+        });
     }
 
 }

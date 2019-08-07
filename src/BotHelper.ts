@@ -9,24 +9,23 @@ export default class BotHelper{
     private _Initializer;
     private _http;
     private _sc2server;
+    private _channelname;
 
     constructor(){
         this._Initializer = Initializer;
         this._ClientHolder = ClientHolder;
-        this._http = new http();
+        this._http = http;
         this._Config = Config;
         this.sc2server = this._Config.App.Game.region;
         this.InitializeClient();
+        this._channelname = this._Initializer.channelname;
     }
-    sc2server = this.Config.App.Game.region; // Sets a constraint on the selectable sc2unmasked accounts
+    sc2server = this._Config.App.Game.region; // Sets a constraint on the selectable sc2unmasked accounts
 
     async InitializeClient(){
         await this._ClientHolder.init(this._Initializer.clientid, this._Initializer.accessToken);
     }
 
-    /** Check if stream is currently online
-     * @param {*} username 
-     */
     async IsStreamLive(username: string) {
         var client = this._ClientHolder.GetClient();
         const user = await client.helix.users.getUserByName(username);
@@ -36,32 +35,29 @@ export default class BotHelper{
         return user.getStream();
     }
 
-    /** Get uptime using the current time minus the startDate of stream (in milliseconds) then convert to standard time form
-     * @param {*} channelname 
-     */
-    async GetUptime(channelname: string, callback){
-        if (await this.IsStreamLive(channelname)){
+    async GetUptime(callback){
+        if (await this.IsStreamLive(this._channelname)){
             var client = this._ClientHolder.GetClient();
-            const user = await client.helix.users.getUserByName(channelname);
+            const user = await client.helix.users.getUserByName(this._channelname);
             const stream = user.getStream();
             var start = stream.startDate; // Start date
             var currentTime = new Date(); // Current time
             var msdifference = (currentTime - start); // Difference
             var output = await this.ConvertUptime(msdifference);
             if(output.day === 0 && output.hour === 0 && output.minutes === 0){
-                callback(channelname + " has been live for " + output.seconds + " seconds");
+                callback(this._channelname + " has been live for " + output.seconds + " seconds");
             }
             else if(output.day === 0 && output.hour === 0){
-                callback(channelname + " has been live for " + output.minutes + " minutes " + output.seconds + " seconds");
+                callback(this._channelname + " has been live for " + output.minutes + " minutes " + output.seconds + " seconds");
             }
             else if(output.day === 0){
-                callback(channelname + " has been live for " + output.hour + " hours " + output.minutes + " minutes " + output.seconds + " seconds");
+                callback(this._channelname + " has been live for " + output.hour + " hours " + output.minutes + " minutes " + output.seconds + " seconds");
             }
             else if(output.day === 1){
-                callback(channelname + " has been live for " + output.day + " day " + output.hour + " hours " + output.minutes + " minutes " + output.seconds + " seconds");
+                callback(this._channelname + " has been live for " + output.day + " day " + output.hour + " hours " + output.minutes + " minutes " + output.seconds + " seconds");
             }
             else{
-                callback(channelname + " has been live for " + output.day + " days" + output.hour + " hours " + output.minutes + " minutes " + output.seconds + " seconds");
+                callback(this._channelname + " has been live for " + output.day + " days" + output.hour + " hours " + output.minutes + " minutes " + output.seconds + " seconds");
             }
         }
         else{
@@ -69,11 +65,7 @@ export default class BotHelper{
         }
     }
 
-    /** Convert milliseconds into uptime literal
-     * 
-     * @param {*} milliseconds 
-     */
-    async ConvertUptime(milliseconds: number): Promise<object> {
+    async ConvertUptime(milliseconds: number){
         var day: number; 
         var hour: number;
         var minutes: number;
@@ -93,10 +85,6 @@ export default class BotHelper{
         };
     }
 
-    /** Shoutout streamer. If they are currently live, post information about the game they are playing
-     * 
-     * @param {*} name 
-     */
     async Shoutout(name: string, callback){
         try{
             if(await this.IsStreamLive(name)){
@@ -111,15 +99,9 @@ export default class BotHelper{
         } catch (err) { console.log(err); }
     }
 
-    /** Search Sc2Unmasked and return MMRs of two players
-     * 
-     * @param {*} player1 
-     * @param {*} player2 
-     * @param {*} callback 
-     */
-    async SearchSC2Unmasked(player1: string, player2: string, callback){
-        var player1search = "http://sc2unmasked.com/API/Player?name=" + player1.name + "&server=" + this.sc2server + "&race=" + this.GetMatchup(player1.race).toLowerCase();
-        var player2search = "http://sc2unmasked.com/API/Player?name=" + player2.name + "&server=" + this.sc2server + "&race=" + this.GetMatchup(player2.race).toLowerCase();
+    async SearchSC2Unmasked(player1: any, player2: any, callback){
+        var player1search = "http://sc2unmasked.com/API/Player?name=" + player1.name + "&server=" + this.sc2server + "&race=" + this.GetMatchup(player1.race);
+        var player2search = "http://sc2unmasked.com/API/Player?name=" + player2.name + "&server=" + this.sc2server + "&race=" + this.GetMatchup(player2.race);
         
         async function getMMR(playerdata, player, callback){
             var mmr = 0;
@@ -164,10 +146,7 @@ export default class BotHelper{
         })
     }
 
-    /** Get Starcraft opponent if the application is running locally
-     * 
-     */
-    async GetOpponent() {
+    async GetOpponent(callback) {
         var gameurl = "http://localhost:6119/game"; //StarCraft 2 Port
         this._http.get(gameurl, (resp) => {
             resp.on('data', (chunk) => {
@@ -183,41 +162,36 @@ export default class BotHelper{
                         var player1race = this.GetMatchup(player1.race);
                         var player2 = players[1];
                         var player2race = this.GetMatchup(player2.race);
-                        chat.action(channelname, player1.name + " (" + player1race + "), " + mmr1 + " MMR" + " VS " + player2.name + " (" + player2race  + "), " + mmr2 + " MMR");
+                        callback(player1.name + " (" + player1race + "), " + mmr1 + " MMR" + " VS " + player2.name + " (" + player2race  + "), " + mmr2 + " MMR");
                     }
                     else{
-                        chat.action(channelname, channelname + " is in not in a game, or is in a replay");
+                        callback(this._channelname + " is in not in a game, or is in a replay");
                     }
                 });
             });
             
         }).on("error", (err) => {
             console.log("Starcraft needs to be open");
-            chat.action(channelname, "StarCraft must be open");
+            callback("StarCraft II must be open");
         });
     }
 
-    /** Get Starcraft II matchup
-     * 
-     * @param {*} race 
-     */
-    async GetMatchup(race: string){
+    async GetMatchup(race: string): Promise<string> {
         if(race == "Prot"){
-            race = 'P';
+            race = 'p';
         }
         if(race == "Zerg"){
-            race = 'Z';
+            race = 'z';
         }
         if(race == "Terr"){
-            race = 'T';
+            race = 't';
         }
         return race;
     }
 
-    // Print current hardcoded commands and custom commands
     async PrintCommands(){
         try{
-            var commands = this.Config.Commands;
+            var commands = this._Config.Commands;
             console.log("\nCurrent Commands:");
             console.log("!shoutout twitchname");
             console.log("!add !command message");

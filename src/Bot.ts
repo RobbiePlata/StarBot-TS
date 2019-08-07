@@ -73,7 +73,6 @@ export default class Bot{
             } catch { }
         });
     
-        // Cycle through messages every set interval
         try{
             if(Object.keys(this._Config.Alerts.Messages).length !== 0){
                 var count = Math.floor(Math.random() * Object.keys(this._Config.Alerts.Messages).length); // Start count on a random number (So first message is random)
@@ -91,7 +90,6 @@ export default class Bot{
             }
         } catch { }
     
-        // Hosted
         this._chat.on("hosted", (channel, username, viewers, autohost) => {
             if(Object.keys(this._Config.Alerts.HostMessages).length !== 0){
                 try{
@@ -113,7 +111,6 @@ export default class Bot{
             }
         });
     
-        // Subscription
         this._chat.on("subscription", function (channel, username, message, userstate) {
             try{
                 var submessages = this._Config.Alerts.Submessages;
@@ -131,7 +128,6 @@ export default class Bot{
             } catch { }
         });
     
-        // Resub
         this._chat.on("resub", function (channel, username, months, message) {
             try{
                 var submessages = this._Config.Alerts.Submessages;
@@ -148,7 +144,6 @@ export default class Bot{
             } catch { }
         });
     
-        // Ban
         this._chat.on("ban", (channel, username, reason) => {
             try{
                 var banmessages = this._Config.Alerts.BanMessages;
@@ -165,7 +160,6 @@ export default class Bot{
             } catch { }
         });
     
-        // Commands
         this._chat.on('chat', function(channel, user, message, self){   
             
             // Respond to user command using commands
@@ -186,12 +180,11 @@ export default class Bot{
             }catch(err){
                 console.log(err);
             }
-    
-            // Get Uptime
+            
             if(strArray[0] === ("!uptime")){
                 try{
                     (async() => {
-                        this.BotHelper.GetUptime(this._channelname, function(uptime){
+                        this.BotHelper.GetUptime(function(uptime){
                             this._chat.action(this._channelname, uptime);
                         }); // TODO get object and post uptime to chat
                         
@@ -199,14 +192,12 @@ export default class Bot{
                 } catch { }
             }
             
-            // Respond with Starcraft II opponent of streamer NOT FINISHED
             if(strArray[0] === ("!opponent")){  
                 (async() => {
                     await this.BotHelper.GetOpponent();
                 })();
             }
     
-            // Execute Replay Renamer.py script
             if(strArray[0] === ("!replaypack")){
                 try{
                     if(user.username === this._channelname || user.username === channelname.toLowerCase()){
@@ -219,7 +210,6 @@ export default class Bot{
                 } catch { }
             }
     
-            // Add command to commands
             if(strArray[0] === ("!add")){
                 try{
                     if(user.username === this._channelname || user.username === this._channelname.toLowerCase()){
@@ -246,7 +236,6 @@ export default class Bot{
                 } catch { }
             }
     
-            // Remove command from commands
             if(strArray[0] === ("!remove")){
                 try{
                     if(user.username === this._channelname.user || user.username === this._channelname.toLowerCase()){
@@ -273,7 +262,6 @@ export default class Bot{
                 } catch { }
             }
             
-            // Add sub message
             if(strArray[0] === ("!addsub")){
                 try{
                     if(user.username === this._channelname || user.username === this._channelname.toLowerCase()){
@@ -298,7 +286,6 @@ export default class Bot{
                 
             }
     
-            // Add user ban message
             if(strArray[0] === ("!addban")){
                 try{
                     if(user.username === this._channelname || user.username === this._channelname.toLowerCase()){
@@ -322,7 +309,6 @@ export default class Bot{
                 } catch { }
             }
     
-            // Add periodic message 
             if(strArray[0] === ("!addmessage")){
                 try{
                     if(user.username === this._channelname || user.username === this._channelname.toLowerCase()){
@@ -346,28 +332,24 @@ export default class Bot{
                 } catch { }
             }
     
-            // Remove sub message
             if(strArray[0] === ("!removesub")){
                 try{
     
                 } catch { }
             }
     
-            // Remove user ban message
             if(strArray[0] === ("!removeban")){
                 try{
     
                 } catch { }
             }
     
-            // Remove periodic message 
             if(strArray[0] === ("!removemessage")){
                 try{
     
                 } catch { }
             }
     
-            // Add messages that appear everytime you start the bot
             if(strArray[0] === ("!addwelcome")){
                 try{
                     if(user.username === this._channelname || user.username === this._channelname.toLowerCase()){
@@ -391,7 +373,6 @@ export default class Bot{
                 } catch { }
             }
     
-            // Add messages that appears every host
             if(strArray[0] === ("!addhostmessage")){
                 try{
                     if(user.username === this._channelname || user.username === this._channelname.toLowerCase()){
@@ -415,7 +396,6 @@ export default class Bot{
                 } catch { }
             }
     
-            // Add message that appears every messageInterval
             if(strArray[0] === ("!shoutout")){
                 try{
                     if(user.username === this._channelname || user.username === this._channelname.toLowerCase()){
@@ -435,7 +415,6 @@ export default class Bot{
                 
             }
     
-            // Add message that appears every messageInterval
             if(strArray[0] === ("!pirate")){
                 try{
                     if (strArray.length < 2){
@@ -446,16 +425,6 @@ export default class Bot{
                         sentenceArray.shift();
                         this._chat.action(this._channelname, PirateSpeak.translate(sentenceArray.join(" ")));
                     }   
-                } catch { }
-            }
-    
-            // Kill chat bot while keeping other functionality
-            if(strArray[0] === ("!killbot")){
-                try{
-                    if(user.username === this._channelname || user.username === this._channelname.toLowerCase()){
-                        this._chat.action(this._channelname, "Goodbye");
-                        this._chat = null;
-                    }
                 } catch { }
             }
     
