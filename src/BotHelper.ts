@@ -1,6 +1,6 @@
 import Initializer from './Initializer';
 import ClientHolder from './ClientHolder';
-import http from 'http';
+import http from 'http'; 
 import Config from './Config.json';
 export default class BotHelper{
     

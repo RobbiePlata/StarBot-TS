@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'file-system';
 import readline from 'readline';
 import opn from 'opn';
 import config from './Config.json';
