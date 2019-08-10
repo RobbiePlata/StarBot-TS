@@ -13,7 +13,7 @@ export default class BotHelper{
 
     constructor(){
         this._Initializer = Initializer;
-        this._ClientHolder = ClientHolder;
+        this._ClientHolder = new ClientHolder();
         this._http = http;
         this._Config = Config;
         this._sc2server = this._Config.App.Game.region;

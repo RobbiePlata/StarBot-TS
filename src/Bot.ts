@@ -1,31 +1,25 @@
-import tmi from 'tmi.js';
-import fs from 'file-system';
 import Initializer from './Initializer';
 import BotHelper from './BotHelper';
-import PirateSpeak from 'pirate-speak';
-import Config from './Config.json';
-import PythonShell from 'python-shell';
+import tmi = require('tmi.js');
+import fs = require('fs');
+import PirateSpeak = require('pirate-speak');
+import Config = require('./Config.json');
+import { exec } from 'child_process';
 
 export default class Bot{
     
-    private _tmi: any;
-    private _fs: any;
     private _Initializer: any;
     private _BotHelper: any;
-    private _PirateSpeak: any;
     private _Config: any;
     private _options: any;
     private _messageInterval: any;
-    private _pythonshell
     private _chat: any;
     private _channelname: string;
     
     constructor(){
-        this._tmi = new tmi();
-        this._fs = new fs();
+        var exec = require('child_process').execFile;
         this._Initializer = new Initializer();
         this._BotHelper = new BotHelper();
-        this._PirateSpeak = new PirateSpeak();
         this._Config = Config;
         this._channelname = this._Initializer.channelname;
         this._options = {
@@ -39,15 +33,11 @@ export default class Bot{
             get interval(){ return this.messageInterval.time; },
             set interval(value) { this.time = value * 60000; }
         };
-        this._pythonshell = PythonShell;
-        this._chat = new tmi.client(this._options);
+        this._chat = tmi.client(this._options);
     }
 
-    public get tmi(): any { return this._tmi; }
-    public get fs(): any { return this._fs; }
     public get Initializer(): any { return this._Initializer; }
     public get BotHelper(): any { return this._BotHelper; }
-    public get PirateSpeak(): any  { return this._PirateSpeak; }
     public get MessageInterval(): any { return this._messageInterval; }
     public get chat(): any { return this._chat; }
 
@@ -58,10 +48,7 @@ export default class Bot{
     RecordStats(){
         if(true){ // if config has stats recorder enabled
             try{
-                this._pythonshell.run('/Stats.py', null, function (err) {
-                    console.log("Recording records..")
-                    if (err) throw err;
-                });
+                exec('Stats.exe');
             } catch {  }
         }
     }
@@ -207,11 +194,8 @@ export default class Bot{
                 try{
                     if(user.username === this._channelname || user.username === this._channelname.toLowerCase()){
                         this._chat.action(this._channelname, "Working on it");
-                        this._PythonShell.run(this.___dirname + '/Renamer.py', null, function (err) {
-                            if (err) throw err;
-                            this._chat.action(this._channelname, "Replaypack finished");
-                        });
-                        }
+                        exec(this.___dirname + '/Renamer.py');
+                    }
                 } catch { }
             }
     
@@ -227,10 +211,9 @@ export default class Bot{
                             sentenceArray.shift();
                             this._Config.Commands[strArray[1]] = sentenceArray.join(" ").toString();
                             var error;
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished(error));
-                            function finished(error){
-                                this._chat.action(this._channelname, "command " + strArray[1] +" added");
-                            }
+                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4));
+                            this._chat.action(this._channelname, "command " + strArray[1] +" added");
+                            
                         }
                         else{
                             this._chat.action(this._channelname, "Use an exclamation point at the start of the command you want to add");
@@ -253,10 +236,9 @@ export default class Bot{
                                 delete this._Config.Commands[strArray[1]];
                                 var strConfig = JSON.stringify(this._Config, null, 4);
                                 var error;
-                                fs.writeFileSync("./config.json", strConfig, finished(error));
-                                function finished(error){
-                                    this._chat.action(this._channelname, "command " + strArray[1] +" removed");
-                                }
+                                fs.writeFileSync("./config.json", strConfig);
+                                this._chat.action(this._channelname, "command " + strArray[1] +" removed");
+                                
                             }
                             else{
                                 this._chat.action(this._channelname, "Use an exclamation point at the start of the command you want to remove");
@@ -281,10 +263,9 @@ export default class Bot{
                             var keyvalue = Object.keys(this._Config.Alerts.SubMessages).length;
                             this._Config.Alerts.SubMessages[keyvalue] = sentenceArray.join(" ").toString();
                             var error;
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished(error));
-                            function finished(error){
-                                this._chat.action(this._channelname, sentenceArray.join(" ") + " submessage added!");
-                            }
+                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4));
+                            this._chat.action(this._channelname, sentenceArray.join(" ") + " submessage added!");
+                            
                         }   
                     }
                     else{
@@ -306,10 +287,9 @@ export default class Bot{
                             var keyvalue = Object.keys(this._Config.Alerts.BanMessages).length;
                             this._Config.Alerts.BanMessages[keyvalue] = sentenceArray.join(" ").toString();
                             var error;
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished(error));
-                            function finished(error){
-                                this._chat.action(this._channelname, sentenceArray.join(" ") + " banmessage added!");
-                            }
+                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4));
+                            this._chat.action(this._channelname, sentenceArray.join(" ") + " banmessage added!");
+                            
                         }   
                     }
                     else{
@@ -330,10 +310,9 @@ export default class Bot{
                             var keyvalue = Object.keys(this._Config.Alerts.Messages).length;
                             this._Config.Alerts.Messages[keyvalue] = sentenceArray.join(" ").toString();
                             var error;
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished(error));
-                            function finished(error){
-                                this._chat.action(this._channelname, sentenceArray.join(" ") + " message added!");
-                            }
+                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4));
+                            this._chat.action(this._channelname, sentenceArray.join(" ") + " message added!");
+                            
                         }
                     }
                     else{
@@ -372,10 +351,9 @@ export default class Bot{
                             keyvalue = Object.keys(this._Config.Alerts.WelcomeMessages).length;
                             this._Config.Alerts.WelcomeMessage[keyvalue] = sentenceArray.join(" ").toString();
                             var error
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished(error));
-                            function finished(error){
-                                this._chat.action(this._channelname, sentenceArray.join(" ") + " welcomemessage added!");
-                            }
+                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4));
+                            this._chat.action(this._channelname, sentenceArray.join(" ") + " welcomemessage added!");
+                            
                         }
                     }
                     else{
@@ -396,10 +374,9 @@ export default class Bot{
                             keyvalue = Object.keys(this._Config.Alerts.HostMessages).length;
                             this._Config.Alerts.HostMessages[keyvalue] = sentenceArray.join(" ").toString();
                             var error;
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4), finished(error));
-                            function finished(error){
-                                this._chat.action(this._channelname, sentenceArray.join(" ") + " host message added!");
-                            }
+                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4));
+                            this._chat.action(this._channelname, sentenceArray.join(" ") + " host message added!");
+                            
                         }
                     }
                     else{
