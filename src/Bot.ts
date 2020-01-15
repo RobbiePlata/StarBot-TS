@@ -458,7 +458,7 @@ export default class Bot{
                 try{
                     if(user.username === this._channelname || user.username === this._channelname.toLowerCase() || user.mod){
                         if(strArray.length === 1){
-                            this._BotHelper.SearchPlayer("rob", strArray[2], strArray[3], (player: Player) => {
+                            this._BotHelper.SearchPlayer(strArray[1], strArray[2], strArray[3], (player: Player) => {
                                 this._chat.action(this._channelname, player.toString());
                             });
                         }

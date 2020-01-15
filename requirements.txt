@@ -22,9 +22,10 @@ pycparser==2.19
 PyInstaller==3.5
 pywin32-ctypes==0.2.0
 requests==2.22.0
-sc2reader==1.4.0
 UNKNOWN==0.0.0
 urllib3==1.25.3
 virtualenv==16.7.2
 virtualenv-clone==0.5.3
 whichcraft==0.6.0
+
+Use -> pip install --user --force-reinstall git+https://github.com/ggtracker/sc2reader.git <- to install sc2reader PYPI is out of date  (Remove this line from requirments.txt to install the rest) 
