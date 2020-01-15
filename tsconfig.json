@@ -1,27 +1,27 @@
 {
-    "compilerOptions": {
-        "moduleResolution": "node",
-        "module": "commonjs",
-        "resolveJsonModule": true,
-        "esModuleInterop": true,
-        "allowSyntheticDefaultImports": true,
-        "rootDir": "src",
-		"outDir": "lib",
+  "compilerOptions": {
+      "moduleResolution": "node",
+      "module": "commonjs",
+      "resolveJsonModule": true,
+      "esModuleInterop": true,
+      "allowSyntheticDefaultImports": true,
+      "rootDir": "src",
+      "outDir": "lib",
         "declaration": true,
-        "declarationDir": "src",
         "lib": ["es6", "dom"],
         "target": "es6",
-    },
-    "include": [
-        "**/*"
-      ],
-      "exclude": [
-        "assets",
-        "node_modules",
-        "bower_components",
-        "jspm_packages"
-      ],
-      "typeAcquisition": {
-        "enable": true
-      }
-  } 
+      "sourceMap": true,
+  },
+  "include": [
+      "**/*"
+    ],
+    "exclude": [
+      "assets",
+      "node_modules",
+      "bower_components",
+      "jspm_packages"
+    ],
+    "typeAcquisition": {
+      "enable": true
+    }
+} 

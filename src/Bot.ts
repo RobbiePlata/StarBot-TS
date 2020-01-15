@@ -2,13 +2,13 @@ import Initializer from './Initializer';
 import BotHelper from './BotHelper';
 import tmi = require('tmi.js');
 import fs = require('fs');
-import PirateSpeak = require('pirate-speak');
-import Config = require('./Config.json');
+import path from 'path';
+import Config from '../Config.json';
 import { exec } from 'child_process';
 
 export default class Bot{
     
-    private _Initializer: any;
+    public _Initializer: any;
     private _BotHelper: any;
     private _Config: any;
     private _options: any;
@@ -54,15 +54,18 @@ export default class Bot{
     }
     
     Run(){
-        this._chat.on('connected', function(address, port) {
+        this._chat.on('connected', (address, port) => {
             try{
-                console.log("Welcome " + this.Initializer.channelname + ", " + this.Initializer.botusername + " is online!\n");
+                console.log("Welcome " + this._Initializer.channelname + ", " + this._Initializer.botusername + " is online!\n");
                 var welcomemessages = this._Config.Alerts.WelcomeMessages;
                 var random = Math.floor(Math.random() * Object.keys(welcomemessages).length);
                 var welcomemessage = welcomemessages[random];
+                if(welcomemessage == undefined ){
+                    welcomemessage = 'online';
+                }
                 this._chat.action(this._channelname, welcomemessage);
                 this.BotHelper.PrintCommands();
-            } catch { }
+            } catch (ex) { console.log(ex) }
         });
     
         try{
@@ -81,8 +84,29 @@ export default class Bot{
                 }, this._messageInterval.interval); 
             }
         } catch { }
-    
+
         this._chat.on("hosted", (channel, username, viewers, autohost) => {
+            if(Object.keys(this._Config.Alerts.HostMessages).length !== 0){
+                try{
+                    var hostmessages = this._Config.Alerts.HostMessages;
+                    var random = Math.floor(Math.random() * Object.keys(hostmessages).length);
+                    var hostmessage = hostmessages[random];
+                    var strArrayMessage = hostmessage.split(" ");
+                    for(let index = 0; index < strArrayMessage.length; index ++){
+                        if(strArrayMessage[index].toLowerCase() == "user"){
+                            strArrayMessage[index] = username;
+                        }
+                        if(strArrayMessage[index].toLowerCase() == "viewers"){
+                            strArrayMessage[index] = viewers;
+                        }
+                    }
+                    strArrayMessage = strArrayMessage.join(" ");
+                    this._chat.action(this._channelname, strArrayMessage);
+                } catch { }
+            }
+        });
+
+        this._chat.on("raided", (channel, username, viewers, autohost) => {
             if(Object.keys(this._Config.Alerts.HostMessages).length !== 0){
                 try{
                     var hostmessages = this._Config.Alerts.HostMessages;
@@ -136,7 +160,7 @@ export default class Bot{
             } catch { }
         });
     
-        this._chat.on("ban", (channel, username, reason) => {
+        this._chat.on("ban", (channel, username, reason, userstate) => {
             try{
                 var banmessages = this._Config.Alerts.BanMessages;
                 var random = Math.floor(Math.random() * Object.keys(banmessages).length);
@@ -151,8 +175,34 @@ export default class Bot{
                 this._chat.action(this._channelname, strArrayMessage);    
             } catch { }
         });
-    
-        this._chat.on('chat', function(channel, user, message, self){   
+
+        this._chat.on("timeout", (channel, username, reason, duration, userstate) => {
+            try{
+                var banmessages = this._Config.Alerts.BanMessages;
+                var random = Math.floor(Math.random() * Object.keys(banmessages).length);
+                var banmessage = banmessages[random];
+                var strArrayMessage = banmessage.split(" ");
+                for(let index = 0; index < strArrayMessage.length; index ++){
+                    if(strArrayMessage[index].toLowerCase() == "user"){
+                        strArrayMessage[index] = username;
+                    }
+                }
+                strArrayMessage = strArrayMessage.join(" ");
+                this._chat.action(this._channelname, strArrayMessage);    
+            } catch { }
+        });
+
+        this._chat.on('hosting', (channel, username, viewers) => {
+            try{
+                (async() => {
+                    this._BotHelper.Shoutout(username, (shoutout) => {
+                        this._chat.action(this._channelname, shoutout);
+                    });
+                })();
+            } catch { }
+        });
+
+        this._chat.on('chat', (channel, user, message, self) => {   
             
             // Respond to user command using commands
             try{
@@ -176,29 +226,13 @@ export default class Bot{
             if(strArray[0] === ("!uptime")){
                 try{
                     (async() => {
-                        this.BotHelper.GetUptime(function(uptime){
+                        this._BotHelper.GetUptime((uptime) => {
                             this._chat.action(this._channelname, uptime);
                         }); // TODO get object and post uptime to chat
-                        
                     })();
                 } catch { }
             }
             
-            if(strArray[0] === ("!opponent")){  
-                (async() => {
-                    await this.BotHelper.GetOpponent();
-                })();
-            }
-    
-            if(strArray[0] === ("!replaypack")){
-                try{
-                    if(user.username === this._channelname || user.username === this._channelname.toLowerCase()){
-                        this._chat.action(this._channelname, "Working on it");
-                        exec(this.___dirname + '/Renamer.py');
-                    }
-                } catch { }
-            }
-    
             if(strArray[0] === ("!add")){
                 try{
                     if(user.username === this._channelname || user.username === this._channelname.toLowerCase()){
@@ -211,7 +245,7 @@ export default class Bot{
                             sentenceArray.shift();
                             this._Config.Commands[strArray[1]] = sentenceArray.join(" ").toString();
                             var error;
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4));
+                            fs.writeFileSync(path.join(__dirname , '../Config.json'), JSON.stringify(this._Config, null, 4));
                             this._chat.action(this._channelname, "command " + strArray[1] +" added");
                             
                         }
@@ -227,7 +261,7 @@ export default class Bot{
     
             if(strArray[0] === ("!remove")){
                 try{
-                    if(user.username === this._channelname.user || user.username === this._channelname.toLowerCase()){
+                    if(user.username === this._channelname || user.username === this._channelname.toLowerCase()){
                         if(strArray.length < 2 || strArray.length > 2){
                             this._chat.action(this._channelname, "To remove a command, type \"!remove\"");
                         }
@@ -236,7 +270,7 @@ export default class Bot{
                                 delete this._Config.Commands[strArray[1]];
                                 var strConfig = JSON.stringify(this._Config, null, 4);
                                 var error;
-                                fs.writeFileSync("./config.json", strConfig);
+                                fs.writeFileSync(path.join(__dirname , '../Config.json'), strConfig);
                                 this._chat.action(this._channelname, "command " + strArray[1] +" removed");
                                 
                             }
@@ -263,7 +297,7 @@ export default class Bot{
                             var keyvalue = Object.keys(this._Config.Alerts.SubMessages).length;
                             this._Config.Alerts.SubMessages[keyvalue] = sentenceArray.join(" ").toString();
                             var error;
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4));
+                            fs.writeFileSync(path.join(__dirname , '../Config.json'), JSON.stringify(this._Config, null, 4));
                             this._chat.action(this._channelname, sentenceArray.join(" ") + " submessage added!");
                             
                         }   
@@ -287,7 +321,7 @@ export default class Bot{
                             var keyvalue = Object.keys(this._Config.Alerts.BanMessages).length;
                             this._Config.Alerts.BanMessages[keyvalue] = sentenceArray.join(" ").toString();
                             var error;
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4));
+                            fs.writeFileSync(path.join(__dirname , '../Config.json'), JSON.stringify(this._Config, null, 4));
                             this._chat.action(this._channelname, sentenceArray.join(" ") + " banmessage added!");
                             
                         }   
@@ -310,7 +344,7 @@ export default class Bot{
                             var keyvalue = Object.keys(this._Config.Alerts.Messages).length;
                             this._Config.Alerts.Messages[keyvalue] = sentenceArray.join(" ").toString();
                             var error;
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4));
+                            fs.writeFileSync(path.join(__dirname , '../Config.json'), JSON.stringify(this._Config, null, 4));
                             this._chat.action(this._channelname, sentenceArray.join(" ") + " message added!");
                             
                         }
@@ -349,9 +383,9 @@ export default class Bot{
                             var sentenceArray = strArray.slice(); // Clone array
                             sentenceArray.shift();
                             keyvalue = Object.keys(this._Config.Alerts.WelcomeMessages).length;
-                            this._Config.Alerts.WelcomeMessage[keyvalue] = sentenceArray.join(" ").toString();
+                            this._Config.Alerts.WelcomeMessages[keyvalue] = sentenceArray.join(" ").toString();
                             var error
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4));
+                            fs.writeFileSync(path.join(__dirname , '../Config.json'), JSON.stringify(this._Config, null, 4));
                             this._chat.action(this._channelname, sentenceArray.join(" ") + " welcomemessage added!");
                             
                         }
@@ -362,7 +396,7 @@ export default class Bot{
                 } catch { }
             }
     
-            if(strArray[0] === ("!addhostmessage")){
+            if(strArray[0] === ("!addhost")){
                 try{
                     if(user.username === this._channelname || user.username === this._channelname.toLowerCase()){
                         if(strArray.length < 2){
@@ -374,7 +408,7 @@ export default class Bot{
                             keyvalue = Object.keys(this._Config.Alerts.HostMessages).length;
                             this._Config.Alerts.HostMessages[keyvalue] = sentenceArray.join(" ").toString();
                             var error;
-                            fs.writeFileSync("./config.json", JSON.stringify(this._Config, null, 4));
+                            fs.writeFileSync(path.join(__dirname , '../Config.json'), JSON.stringify(this._Config, null, 4));
                             this._chat.action(this._channelname, sentenceArray.join(" ") + " host message added!");
                             
                         }
@@ -393,30 +427,52 @@ export default class Bot{
                         }
                         else if (strArray.length == 2){
                             (async() => {
-                                this._BotHelper.Shoutout(strArray[1], function(shoutout){
+                                this._BotHelper.Shoutout(strArray[1], (shoutout) => {
                                     this._chat.action(this._channelname, shoutout);
                                 });
                             })();
-                            
                         }
                     }
                 } catch { }
                 
             }
-    
-            if(strArray[0] === ("!pirate")){
+
+            if(strArray[0] === ("!replaypack")){
                 try{
-                    if (strArray.length < 2){
-                        this._chat.action(this._channelname, "To talk like a pirate type \"!pirate message here\"");
+                    if(user.username === this._channelname || user.username === this._channelname.toLowerCase()){
+                        this._chat.action(this._channelname, "Working on it");
+                        exec(__dirname + '/Renamer.py');
                     }
-                    else if (strArray.length >= 2){
-                        var sentenceArray = strArray.slice(); // Clone array
-                        sentenceArray.shift();
-                        this._chat.action(this._channelname, PirateSpeak.translate(sentenceArray.join(" ")));
-                    }   
                 } catch { }
             }
-    
+
+            if(strArray[0] === ("!opponent")){  
+                (async() => {
+                    this._BotHelper.GetOpponent((mmr) => {
+                        this._chat.action(this._channelname, mmr);
+                    });
+                })();
+            }
+
+            if(strArray[0] === ("!search")){
+                try{
+                    if(user.username === this._channelname || user.username === this._channelname.toLowerCase() || user.mod){
+                        if(strArray.length === 1){
+                            this._BotHelper.SearchPlayer("rob", strArray[2], strArray[3], (player: Player) => {
+                                this._chat.action(this._channelname, player.toString());
+                            });
+                        }
+                        if(strArray.length >= 2){
+                            this._BotHelper.SearchPlayer(strArray[1], strArray[2], strArray[3], (player: Player) => {
+                                this._chat.action(this._channelname, player.toString());
+                            });
+                        }
+                    }
+                } catch {  }
+            }
+
         });
+
+        
     }
 }

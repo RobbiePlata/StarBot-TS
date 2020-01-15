@@ -1,7 +1,7 @@
 import fs = require('fs');
 import readline = require('readline-sync');
 import open = require('open');
-import Config = require('./Config.json');
+import Config = require('../Config.json');
 
 export default class Initializer{
 
@@ -36,7 +36,7 @@ export default class Initializer{
         else{
             var bot = readline.question("Bot's Username: ");
             Config.App.Bot.name = bot;
-            fs.writeFileSync("./config.json", JSON.stringify(Config, null, 4));
+            fs.writeFileSync("../Config.json", JSON.stringify(Config, null, 4));
             console.log("Username saved");
             try{
                 return Config.App.Bot.name;
@@ -65,7 +65,7 @@ export default class Initializer{
     WriteAccessToken(): string {
         var key = readline.question("Check all scopes, generate token, then enter the code here: ");
         Config.App.Channel.accessToken = key;
-        fs.writeFileSync("./config.json", JSON.stringify(Config, null, 4));
+        fs.writeFileSync("../Config.json", JSON.stringify(Config, null, 4));
         console.log("Access Token saved");
         try{
             return Config.App.Channel.accessToken;
@@ -82,7 +82,7 @@ export default class Initializer{
         else{
             var name = readline.question("Enter your stream channel: ");
             Config.App.Channel.name = name;
-            fs.writeFileSync("./config.json", JSON.stringify(Config, null, 4));
+            fs.writeFileSync("../Config.json", JSON.stringify(Config, null, 4));
             console.log("Username saved");
             try{
                 return Config.App.Channel.name;
@@ -101,7 +101,7 @@ export default class Initializer{
             this.OpenBotAPIWindow();
             var api = readline.question("Enter your Bot's Oauth key: ");
             Config.App.Bot.apikey = api;
-            fs.writeFileSync("./config.json", JSON.stringify(Config, null, 4));
+            fs.writeFileSync("../Config.json", JSON.stringify(Config, null, 4));
             console.log("Bot API key saved");
             try{
                 return Config.App.Bot.apikey;

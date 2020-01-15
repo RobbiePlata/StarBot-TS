@@ -1,8 +1,4 @@
 export default class Initializer {
-    private _opn;
-    private _fs;
-    private _readline;
-    private _config;
     private _apikey;
     private _botusername;
     private _channelname;
@@ -18,7 +14,7 @@ export default class Initializer {
     readonly replaypath: string;
     GetBotUsername(): string;
     GetAccessToken(): string;
-    WriteAccessToken(): void;
+    WriteAccessToken(): string;
     GetChannelName(): string;
     GetBotAPI(): string;
     GetReplayPath(): string;

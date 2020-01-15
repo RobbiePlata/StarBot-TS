@@ -1,44 +1,40 @@
-import Initializer from './Initializer';
 import ClientHolder from './ClientHolder';
 import http from 'http'; 
-import Config from './Config.json';
+import request from 'request';
+import Config from '../Config.json';
+import Player from './Player';
 export default class BotHelper{
     
+    private _request;
     private _Config;
     private _ClientHolder;
-    private _Initializer;
     private _http;
     private _sc2server;
     private _channelname;
 
     constructor(){
-        this._Initializer = Initializer;
+        this._request = request;
         this._ClientHolder = new ClientHolder();
         this._http = http;
         this._Config = Config;
         this._sc2server = this._Config.App.Game.region;
         this.InitializeClient();
-        this._channelname = this._Initializer.channelname;
+        this._channelname = this._Config.App.Channel.name;
     }
 
     async InitializeClient(){
-        await this._ClientHolder.init(this._Initializer.clientid, this._Initializer.accessToken);
-    }
-
-    async IsStreamLive(username: string) {
-        var client = this._ClientHolder.GetClient();
-        const user = await client.helix.users.getUserByName(username);
-        if (!user) {
-            return false;
-        }
-        return user.getStream();
+        await this._ClientHolder.init(this._Config.App.Channel.clientid, this._Config.App.Channel.accessToken,
+             this._Config.App.Channel.clientSecret, this._Config.App.Channel.refreshToken);
     }
 
     async GetUptime(callback){
-        if (await this.IsStreamLive(this._channelname)){
-            var client = this._ClientHolder.GetClient();
-            const user = await client.helix.users.getUserByName(this._channelname);
-            const stream = user.getStream();
+        const client = this._ClientHolder.GetClient();
+        const user = await client.helix.users.getUserByName(this._channelname);
+        const stream = await user.getStream();
+        if (!user) {
+            return false;
+        }
+        else if(stream !== null){
             var start = stream.startDate; // Start date
             var currentTime = new Date(); // Current time
             var msdifference = (currentTime.getTime() - start); // Difference
@@ -86,11 +82,12 @@ export default class BotHelper{
 
     async Shoutout(name: string, callback){
         try{
-            if(await this.IsStreamLive(name)){
-                var client = this._ClientHolder.GetClient();
-                const user = await client.helix.users.getUserByName(name);
-                const channel = await user.getChannel(); ///////////////////////////////
-                callback("Give " + channel.displayName + " a follow at twitch.tv/" + channel.displayName + " They're live right now playing " + channel.game).tost;
+            const client = this._ClientHolder.GetClient();
+            const user = await client.helix.users.getUserByName(name);
+            const stream = await user.getStream();
+            if(stream !== null){
+                const game = await stream.getGame();
+                callback("Give " + user.name + " a follow at twitch.tv/" + user.name + " They're live playing " + game.name + " with " + stream.viewers + " viewers " + '"' + stream.title + '"');
             }
             else{
                 callback("Give " + name + " a follow at twitch.tv/" + name);
@@ -101,48 +98,48 @@ export default class BotHelper{
     async SearchSC2Unmasked(player1: any, player2: any, callback){
         var player1search = "http://sc2unmasked.com/API/Player?name=" + player1.name + "&server=" + this._sc2server + "&race=" + this.GetMatchup(player1.race);
         var player2search = "http://sc2unmasked.com/API/Player?name=" + player2.name + "&server=" + this._sc2server + "&race=" + this.GetMatchup(player2.race);
-        
-        async function getMMR(playerdata, player, callback){
-            var mmr = 0;
-            for (let i = 0; i < playerdata.players.length; i++){
-                if(playerdata.players[i].acc_name == player.name && playerdata.players[i].server == this._sc2server && playerdata.players[i].mmr > mmr){
-                    mmr = playerdata.players[i].mmr;
-                }
-            }
-            callback(mmr);
-        }
 
-        async function requestSC2Unmasked(playersearch, player, callback){
-            this._http.get(playersearch, (resp) => {
-                var playerdatastr ="";
-                resp.on('data', (chunk) => {
-                    playerdatastr += chunk;
-                });
-                
-                resp.on('end', () => {
-                    if(playerdatastr != ""){
-                        var playerdata = JSON.parse(playerdatastr);
-                        getMMR(playerdata, player, function(mmr){
-                            callback(mmr);
-                        })
-                    }
-                    else{
-                        callback("?","?");
-                    }
-                });
-        
-                }).on("error", (err) => {
-                    //console.log(err);
-                    var mmr = "?";
-                    callback(mmr);
-                });
-        }
-
-        requestSC2Unmasked(player1search, player1, function(mmr1){
-            requestSC2Unmasked(player2search, player2, function(mmr2){
+        this.requestSC2Unmasked(player1search, player1, (mmr1) => {
+            this.requestSC2Unmasked(player2search, player2, (mmr2) => {
                 callback(mmr1, mmr2);
             })
         })
+    }
+
+    async getMMR(playerdata, player, callback){
+        var mmr = 0;
+        for (let i = 0; i < playerdata.players.length; i++){
+            if(playerdata.players[i].acc_name == player.name && playerdata.players[i].server == this._sc2server && playerdata.players[i].mmr > mmr){
+                mmr = playerdata.players[i].mmr;
+            }
+        }
+        callback(mmr);
+    }
+
+    async requestSC2Unmasked(playersearch, player, callback){
+        this._http.get(playersearch, (resp) => {
+            var playerdatastr ="";
+            resp.on('data', (chunk) => {
+                playerdatastr += chunk;
+            });
+            
+            resp.on('end', () => {
+                if(playerdatastr != ""){
+                    var playerdata = JSON.parse(playerdatastr);
+                    this.getMMR(playerdata, player, (mmr) => {
+                        callback(mmr);
+                    })
+                }
+                else{
+                    callback("?","?");
+                }
+            });
+    
+            }).on("error", (err) => {
+                //console.log(err);
+                var mmr = "?";
+                callback(mmr);
+            });
     }
 
     async GetOpponent(callback) {
@@ -154,9 +151,10 @@ export default class BotHelper{
             });
             resp.on('end', () => {
                 //console.log(data);
-                this.SearchSC2Unmasked(data.players[0], data.players[1], function(mmr1, mmr2){
+                this.SearchSC2Unmasked(data.players[0], data.players[1], (mmr1, mmr2) => {
                     if(data.isReplay == false){
                         //console.log(mmr1, mmr2);
+                        console.log(data);
                         var players = data.players;
                         var player1 = players[0];
                         var player1race = this.GetMatchup(player1.race);
@@ -176,32 +174,87 @@ export default class BotHelper{
         });
     }
 
-    async GetMatchup(race: string) {
+    GetMatchup(race: string) {
         if(race == "Prot"){
-            race = 'p';
+            race = 'P';
         }
         if(race == "Zerg"){
-            race = 'z';
+            race = 'Z';
         }
         if(race == "Terr"){
-            race = 't';
+            race = 'T';
         }
         return race;
+    }
+
+    async SearchPlayer(profile, server, race, callback){
+        try{
+          if (server === undefined && race === undefined) { // a, b are undefined
+            this._request('http://sc2unmasked.com/API/Player?q=' + profile, { json: true }, (err, res, body) => {
+            if (err) { console.log(err); }
+            if(body.players.length !== 0){
+              this.HighestMMR(body, (player) => {
+                callback(player);
+              });
+            }
+              
+          });
+        } else if (server !== undefined && race === undefined) { // b is undefined
+          this._request('http://sc2unmasked.com/API/Player?q=' + profile + '&server=' + server, { json: true }, (err, res, body) => {
+            if (err) { console.log(err); }
+            if(body.players.length !== 0){
+              this.HighestMMR(body, (player) => {
+                callback(player);
+              });
+            }
+          });
+        } else if (server !== undefined && race !== undefined) { // both have values
+            this._request('http://sc2unmasked.com/API/Player?q=' + profile + '&server=' + server + '&race=' + race, { json: true }, (err, res, body) => {
+            if (err) { console.log(err); }
+            if(body.players.length !== 0){
+              this.HighestMMR(body, (player) => {
+                callback(player);
+              });
+            }
+          });
+        }
+      } catch (ex) { console.log(ex); }
+    }
+  
+    async HighestMMR(data, callback){
+        try{
+            var name, race, mmr = 0, league, server, player;
+            for (var i = 0; i < data.players.length; i++){
+                if(data.players[i].mmr > mmr){
+                name = data.players[i].display_name;
+                if(data.players[i].display_name === null){
+                    name = data.players[i].acc_name;
+                }
+                race = data.players[i].race;
+                mmr = data.players[i].mmr;
+                league = data.players[i].league;
+                server = data.players[i].server;
+                }
+            }
+            player = new Player(name, race, mmr, league, server);
+            callback(player);
+        } catch { }
     }
 
     async PrintCommands(){
         try{
             var commands = this._Config.Commands;
             console.log("\nCurrent Commands:");
-            console.log("!shoutout twitchname");
             console.log("!add !command message");
             console.log("!remove !command");
             console.log("!addmessage message")
             console.log("!addsub message");
             console.log("!addban message");
-            console.log("!uptime");
-            console.log("!addhostmessage");
             console.log("!addwelcome");
+            console.log("!uptime");
+            console.log("!addhost");
+            console.log("!shoutout twitchname");
+            console.log("!search name");
             console.log("");
             Object.keys(commands).forEach(function(key) {
                 console.log(key + ': ' + commands[key])
