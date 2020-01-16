@@ -4,10 +4,11 @@ import tmi = require('tmi.js');
 import fs = require('fs');
 import path from 'path';
 import Config from '../Config.json';
-import { exec } from 'child_process';
+import {PythonShell} from 'python-shell';
 
 export default class Bot{
     
+    private _Stats: any;
     public _Initializer: any;
     private _BotHelper: any;
     private _Config: any;
@@ -17,7 +18,7 @@ export default class Bot{
     private _channelname: string;
     
     constructor(){
-        var exec = require('child_process').execFile;
+        this._Stats;
         this._Initializer = new Initializer();
         this._BotHelper = new BotHelper();
         this._Config = Config;
@@ -48,12 +49,13 @@ export default class Bot{
     RecordStats(){
         if(true){ // if config has stats recorder enabled
             try{
-                exec('Stats.exe');
-            } catch {  }
+                this._Stats = new PythonShell(path.join(__dirname , 'Watcher.py'));
+            } catch (ex) { console.log(ex) }
         }
     }
     
     Run(){
+
         this._chat.on('connected', (address, port) => {
             try{
                 console.log("Welcome " + this._Initializer.channelname + ", " + this._Initializer.botusername + " is online!\n");
