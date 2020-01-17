@@ -13,10 +13,13 @@ class Stats(object):
     
     @staticmethod
     def ConfigData():
-        dir_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..'))
-        with open(dir_path + '\Config.json') as data_file:
-            data = json.load(data_file)
-            return data
+        try:
+            dir_path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..'))
+            with open(dir_path + '\Config.json') as data_file:
+                data = json.load(data_file)
+                return data
+        except Exception as err:
+            print(err)
     
     @staticmethod
     def RecordStats(path):

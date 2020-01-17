@@ -4,11 +4,13 @@ import tmi = require('tmi.js');
 import fs = require('fs');
 import path from 'path';
 import Config from '../Config.json';
-import {PythonShell} from 'python-shell';
+import { PythonShell } from 'python-shell';
+import { Options } from 'electron';
 
 export default class Bot{
     
     private _Stats: any;
+    private _Renamer: any;
     public _Initializer: any;
     private _BotHelper: any;
     private _Config: any;
@@ -19,6 +21,7 @@ export default class Bot{
     
     constructor(){
         this._Stats;
+        this._Renamer;
         this._Initializer = new Initializer();
         this._BotHelper = new BotHelper();
         this._Config = Config;
@@ -31,7 +34,7 @@ export default class Bot{
         }
         this._messageInterval = { // should put this in config
             time: 900000,
-            get interval(){ return this.messageInterval.time; },
+            get interval(){ return this._messageInterval.time; },
             set interval(value) { this.time = value * 60000; }
         };
         this._chat = tmi.client(this._options);
@@ -47,7 +50,7 @@ export default class Bot{
     }
     
     RecordStats(){
-        if(true){ // if config has stats recorder enabled
+        if(this._Config.App.Game.stats){ // if config has stats recorder enabled
             try{
                 this._Stats = new PythonShell(path.join(__dirname , 'Watcher.py'));
             } catch (ex) { console.log(ex) }
@@ -55,7 +58,6 @@ export default class Bot{
     }
     
     Run(){
-
         this._chat.on('connected', (address, port) => {
             try{
                 console.log("Welcome " + this._Initializer.channelname + ", " + this._Initializer.botusername + " is online!\n");
@@ -197,7 +199,7 @@ export default class Bot{
         this._chat.on('hosting', (channel, username, viewers) => {
             try{
                 (async() => {
-                    this._BotHelper.Shoutout(username, (shoutout) => {
+                    this._BotHelper.Shoutout(username, true, (shoutout) => {
                         this._chat.action(this._channelname, shoutout);
                     });
                 })();
@@ -429,7 +431,7 @@ export default class Bot{
                         }
                         else if (strArray.length == 2){
                             (async() => {
-                                this._BotHelper.Shoutout(strArray[1], (shoutout) => {
+                                this._BotHelper.Shoutout(strArray[1], false, (shoutout) => {
                                     this._chat.action(this._channelname, shoutout);
                                 });
                             })();
@@ -443,9 +445,16 @@ export default class Bot{
                 try{
                     if(user.username === this._channelname || user.username === this._channelname.toLowerCase()){
                         this._chat.action(this._channelname, "Working on it");
-                        exec(__dirname + '/Renamer.py');
+                        var options: Options = {
+                            mode: 'text',
+                            args: ['my First Argument', 'My Second Argument', '--option=123']
+                        };
+                        PythonShell.run(path.join(__dirname , 'Renamer.py'), options, (err, results) => {
+                            if (err) throw err;
+                            this._chat.action(this._channelname, "Replay Pack Complete");
+                        });
                     }
-                } catch { }
+                } catch (ex) { console.log(ex) }
             }
 
             if(strArray[0] === ("!opponent")){  
@@ -460,17 +469,74 @@ export default class Bot{
                 try{
                     if(user.username === this._channelname || user.username === this._channelname.toLowerCase() || user.mod){
                         if(strArray.length === 1){
-                            this._BotHelper.SearchPlayer(strArray[1], strArray[2], strArray[3], (player: Player) => {
-                                this._chat.action(this._channelname, player.toString());
-                            });
+                            this._chat.action(this._channelname, "!search profile ?server ?race");
                         }
-                        if(strArray.length >= 2){
+                        else if(strArray.length >= 2){
                             this._BotHelper.SearchPlayer(strArray[1], strArray[2], strArray[3], (player: Player) => {
                                 this._chat.action(this._channelname, player.toString());
                             });
                         }
                     }
                 } catch {  }
+            }
+
+            if(strArray[0] === ("!vt")){
+                try{
+                    fs.readFile(path.join(__dirname , 'Statistics/vsTerran.txt'), (err, winrate) => {
+                        if (err) { console.log(err); };
+                        if(winrate !== undefined){
+                            this._chat.action(this._channelname, winrate);
+                        }
+                    });
+                } catch { }
+                
+            }
+
+            if(strArray[0] === ("!vz")){
+                try{
+                    fs.readFile(path.join(__dirname , 'Statistics/vsZerg.txt'), (err, winrate) => {
+                        if (err) { console.log(err); };
+                        if(winrate !== undefined){
+                            this._chat.action(this._channelname, winrate);
+                        }
+                    });
+                } catch { }
+                
+            }
+
+            if(strArray[0] === ("!vp")){
+                try{
+                    fs.readFile(path.join(__dirname , 'Statistics/vsProtoss.txt'), (err, winrate) => {
+                        if (err) { console.log(err); };
+                        if(winrate !== undefined){
+                            this._chat.action(this._channelname, winrate);
+                        }
+                        
+                    });
+                } catch { }
+                
+            }
+
+            if(strArray[0] === ("!record")){
+                try{ 
+                    fs.exists('Statistics', (exists) => {
+                        if(exists){
+                            fs.readFile(path.join(__dirname , 'Statistics/vsTerran.txt'), 'utf-8', (err, terrandata) => {
+                                fs.readFile(path.join(__dirname , 'Statistics/vsZerg.txt'), 'utf-8', (err, zergdata) => {
+                                    fs.readFile(path.join(__dirname , 'Statistics/vsProtoss.txt'), 'utf-8', (err, protossdata) => {
+                                        var vT = terrandata.split('-');
+                                        var vZ = zergdata.split('-');
+                                        var vP = protossdata.split('-');
+                                        var Wins = parseInt(vT[0]) + parseInt(vZ[0]) + parseInt(vP[0]);
+                                        var Losses = parseInt(vT[1]) + parseInt(vZ[1]) + parseInt(vP[1]);
+                                        var Record = Wins + '-' + Losses;
+                                        this._chat.action(this._channelname, Record);
+                                    });
+                                });
+                            });
+                        }
+                    });
+                } catch { }
             }
 
         });

@@ -80,17 +80,27 @@ export default class BotHelper{
         };
     }
 
-    async Shoutout(name: string, callback){
+    async Shoutout(name: string, hosting: boolean, callback){
         try{
             const client = this._ClientHolder.GetClient();
             const user = await client.helix.users.getUserByName(name);
             const stream = await user.getStream();
             if(stream !== null){
                 const game = await stream.getGame();
-                callback("Give " + user.name + " a follow at twitch.tv/" + user.name + " They're live playing " + game.name + " with " + stream.viewers + " viewers " + '"' + stream.title + '"');
+                if(hosting){
+                    callback("I'm hosting " + user.name + " at twitch.tv/" + user.name + " They're live playing " + game.name + " with " + stream.viewers + " viewers " + '"' + stream.title + '"');
+                }
+                else{
+                    callback("Give " + user.name + " a follow at twitch.tv/" + user.name + " They're live playing " + game.name + " with " + stream.viewers + " viewers " + '"' + stream.title + '"');
+                }
             }
             else{
-                callback("Give " + name + " a follow at twitch.tv/" + name);
+                if(hosting){
+                    callback("I'm hosting " + name + " at twitch.tv/" + name);
+                }
+                else{
+                    callback("Give " + name + " a follow at twitch.tv/" + name);
+                }
             }
         } catch (err) { console.log(err); }
     }
@@ -255,6 +265,10 @@ export default class BotHelper{
             console.log("!addhost");
             console.log("!shoutout twitchname");
             console.log("!search name");
+            console.log("!vt");
+            console.log("!vz");
+            console.log("!vp");
+            console.log("!record")
             console.log("");
             Object.keys(commands).forEach(function(key) {
                 console.log(key + ': ' + commands[key])

@@ -28,6 +28,9 @@ class Watcher:
         self.observer.join()
 
 if __name__ == '__main__':
-    w = Watcher()
-    w.run()
-    
+    try:
+        w = Watcher()
+        w.run()
+    except Exception as err:
+        print(err)
+        print("Stats will be disabled for the remainder of this session.")
