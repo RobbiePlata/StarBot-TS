@@ -12,6 +12,7 @@
             "apikey": ""
         },
         "Game": {
+            "stats": true,
             "scid": [
                 ""
             ],
