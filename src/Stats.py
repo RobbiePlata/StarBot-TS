@@ -61,11 +61,11 @@ class Stats(object):
                     if winnerrace == "Terran":
                         Stats.RecordTerranLoss()
                     if winnerrace == "Zerg":
-                        Stats.RecordTerranLoss()
+                        Stats.RecordZergLoss()
                     if winnerrace == "Protoss":
-                        Stats.RecordTerranLoss()
+                        Stats.RecordProtossLoss()
             if winner not in Names and loser not in Names:
-                print("Names from list are not contained in this replay, thus will not count towards record")
+                print("Names from list are not contained in this replay, thus will not count towards record.")
                 
         except Exception as err:
             print(err)
