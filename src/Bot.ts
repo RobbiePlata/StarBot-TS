@@ -473,21 +473,19 @@ export default class Bot{
 
             if(strArray[0] === ("!mmr")){
                 try{
-                    if(user.username === this._channelname || user.username === this._channelname.toLowerCase() || user.mod){
-                        if(strArray.length === 1){
-                            (async() => {
-                                this._sc2ladder.GetProfile(user.username, strArray[2], strArray[3], (player) => {
-                                    this._chat.action(this._channelname, player.toString());
-                                }); 
-                            })();
-                        }
-                        if(strArray.length >= 2){
-                            (async() => {
-                                this._sc2ladder.GetProfile(strArray[1], strArray[2], strArray[3], (player) => {
-                                    this._chat.action(this._channelname, player.toString());
-                                }); 
-                            })();
-                        }
+                    if(strArray.length === 1){
+                        (async() => {
+                            this._sc2ladder.GetProfile(user.username, strArray[2], strArray[3], (player) => {
+                                this._chat.action(this._channelname, player.toString());
+                            }); 
+                        })();
+                    }
+                    if(strArray.length >= 2){
+                        (async() => {
+                            this._sc2ladder.GetProfile(strArray[1], strArray[2], strArray[3], (player) => {
+                                this._chat.action(this._channelname, player.toString());
+                            }); 
+                        })();
                     }
                 } catch {  }
             }
