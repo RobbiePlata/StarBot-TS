@@ -535,23 +535,21 @@ export default class Bot{
 
             if(strArray[0] === ("!record")){
                 try{ 
-                    fs.exists('Statistics', (exists) => {
-                        if(exists){
-                            fs.readFile(path.join(__dirname , 'Statistics/vsTerran.txt'), 'utf-8', (err, terrandata) => {
-                                fs.readFile(path.join(__dirname , 'Statistics/vsZerg.txt'), 'utf-8', (err, zergdata) => {
-                                    fs.readFile(path.join(__dirname , 'Statistics/vsProtoss.txt'), 'utf-8', (err, protossdata) => {
-                                        var vT = terrandata.split('-');
-                                        var vZ = zergdata.split('-');
-                                        var vP = protossdata.split('-');
-                                        var Wins = parseInt(vT[0]) + parseInt(vZ[0]) + parseInt(vP[0]);
-                                        var Losses = parseInt(vT[1]) + parseInt(vZ[1]) + parseInt(vP[1]);
-                                        var Record = Wins + '-' + Losses;
-                                        this._chat.action(this._channelname, Record);
-                                    });
+                    if(fs.existsSync('Statistics')) {
+                        fs.readFile(path.join(__dirname , 'Statistics/vsTerran.txt'), 'utf-8', (err, terrandata) => {
+                            fs.readFile(path.join(__dirname , 'Statistics/vsZerg.txt'), 'utf-8', (err, zergdata) => {
+                                fs.readFile(path.join(__dirname , 'Statistics/vsProtoss.txt'), 'utf-8', (err, protossdata) => {
+                                    var vT = terrandata.split('-');
+                                    var vZ = zergdata.split('-');
+                                    var vP = protossdata.split('-');
+                                    var Wins = parseInt(vT[0]) + parseInt(vZ[0]) + parseInt(vP[0]);
+                                    var Losses = parseInt(vT[1]) + parseInt(vZ[1]) + parseInt(vP[1]);
+                                    var Record = Wins + '-' + Losses;
+                                    this._chat.action(this._channelname, Record);
                                 });
                             });
-                        }
-                    });
+                        });
+                    }
                 } catch { }
             }
 
