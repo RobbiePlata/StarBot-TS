@@ -481,7 +481,7 @@ export default class Bot{
                                 }); 
                             })();
                         }
-                        if(message.length >= 2){
+                        if(strArray.length >= 2){
                             (async() => {
                                 this._sc2ladder.GetProfile(strArray[1], strArray[2], strArray[3], (player) => {
                                     this._chat.action(this._channelname, player.toString());

@@ -79,6 +79,6 @@ export default class Sc2ladder{
             }
           }
         }
-      } catch { }
+      } catch(err) { console.log(err) }
     }
 }

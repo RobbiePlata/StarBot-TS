@@ -11,7 +11,6 @@ export default class BotHelper{
     private _request;
     private _Config;
     private _ClientHolder;
-    private _http;
     private _sc2server;
     private _channelname;
 
@@ -19,7 +18,6 @@ export default class BotHelper{
         this._sc2ladder = new Sc2ladder();
         this._request = request;
         this._ClientHolder = new ClientHolder();
-        this._http = http;
         this._Config = Config;
         this._sc2server = this._Config.App.Game.region;
         this.InitializeClient();
@@ -113,7 +111,7 @@ export default class BotHelper{
     async GetOpponent(callback) {
         var gameurl = "http://localhost:6119/game"; //StarCraft 2 Port
         var data;
-        this._http.get(gameurl, (resp) => {
+        http.get(gameurl, (resp) => {
             resp.on('data', (chunk) => {
                 data = JSON.parse(chunk);
             });
@@ -121,9 +119,11 @@ export default class BotHelper{
                 if(data.players.length !== 0
                 && data.players[0].result === 'Undecided' 
                 && data.isReplay !== true){
+                    var index = this._Config.App.Game.names.includes(data.players[0].name) ? 1 : 0;
                     var opponent = this._Config.App.Game.names.includes(data.players[0].name) ? data.players[1].name : data.players[0].name;
-                    this._sc2ladder.GetProfile(opponent, (result) => {
-                        callback(result.mmr);
+                    var race = this.GetMatchup(data.players[index].race);
+                    this._sc2ladder.GetProfile(opponent, race, "", (result) => {
+                        callback(result);
                     });
                 }
             });
@@ -136,13 +136,13 @@ export default class BotHelper{
 
     GetMatchup(race: string) {
         if(race == "Prot"){
-            race = 'P';
+            race = 'p';
         }
         if(race == "Zerg"){
-            race = 'Z';
+            race = 'z';
         }
         if(race == "Terr"){
-            race = 'T';
+            race = 't';
         }
         return race;
     }
