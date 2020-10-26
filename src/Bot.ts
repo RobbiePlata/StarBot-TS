@@ -3,12 +3,16 @@ import BotHelper from './BotHelper';
 import tmi = require('tmi.js');
 import fs = require('fs');
 import path from 'path';
+import https from 'https';
 import Config from '../Config.json';
 import { PythonShell } from 'python-shell';
-import { Options } from 'electron';
+import { Options, app } from 'electron';
+import Sc2ladder from './Sc2ladder';
 
 export default class Bot{
     
+    private _sc2ladder: any;
+    private _https: any;
     private _Stats: any;
     private _Renamer: any;
     public _Initializer: any;
@@ -20,6 +24,8 @@ export default class Bot{
     private _channelname: string;
     
     constructor(){
+        this._sc2ladder = new Sc2ladder();
+        this._https = https;
         this._Stats;
         this._Renamer;
         this._Initializer = new Initializer();
@@ -465,19 +471,29 @@ export default class Bot{
                 })();
             }
 
-            if(strArray[0] === ("!search")){
+            if(strArray[0] === ("!mmr")){
                 try{
                     if(user.username === this._channelname || user.username === this._channelname.toLowerCase() || user.mod){
                         if(strArray.length === 1){
-                            this._chat.action(this._channelname, "!search profile ?server ?race");
+                            (async() => {
+                                this._sc2ladder.GetProfile(user.username, strArray[2], strArray[3], (player) => {
+                                    this._chat.action(this._channelname, player.toString());
+                                }); 
+                            })();
                         }
-                        else if(strArray.length >= 2){
-                            this._BotHelper.SearchPlayer(strArray[1], strArray[2], strArray[3], (player: Player) => {
-                                this._chat.action(this._channelname, player.toString());
-                            });
+                        if(message.length >= 2){
+                            (async() => {
+                                this._sc2ladder.GetProfile(strArray[1], strArray[2], strArray[3], (player) => {
+                                    this._chat.action(this._channelname, player.toString());
+                                }); 
+                            })();
                         }
                     }
                 } catch {  }
+            }
+
+            if(strArray[0] === ("!song")){
+                // construction
             }
 
             if(strArray[0] === ("!vt")){
