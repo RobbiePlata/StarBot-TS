@@ -49,6 +49,6 @@
     "utf-8-validate": "^5.0.2"
   },
   "devDependencies": {
-    "electron": "^6.0.1"
+    "electron": "^11.5.0"
   }
 }
